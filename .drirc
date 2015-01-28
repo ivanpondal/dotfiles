@@ -1,0 +1,42 @@
+<driconf>
+    <device screen="0" driver="radeon">
+        <application name="Default">
+            <option name="force_s3tc_enable" value="false" />
+            <option name="no_rast" value="false" />
+            <option name="fthrottle_mode" value="2" />
+            <option name="tcl_mode" value="3" />
+            <option name="texture_depth" value="0" />
+            <option name="def_max_anisotropy" value="1.0" />
+            <option name="no_neg_lod_bias" value="false" />
+            <option name="command_buffer_size" value="8" />
+            <option name="texture_units" value="3" />
+            <option name="dither_mode" value="0" />
+            <option name="hyperz" value="true" />
+            <option name="round_mode" value="0" />
+            <option name="color_reduction" value="1" />
+            <option name="vblank_mode" value="1" />
+        </application>
+        <application name="Unigine Sanctuary" executable="Sanctuary">
+        </application>
+        <application name="Unigine Tropics" executable="Tropics">
+        </application>
+        <application name="Unigine Heaven (32-bit)" executable="heaven_x86">
+        </application>
+        <application name="Unigine Heaven (64-bit)" executable="heaven_x64">
+        </application>
+        <application name="Unigine Valley (32-bit)" executable="valley_x86">
+        </application>
+        <application name="Unigine Valley (64-bit)" executable="valley_x64">
+        </application>
+        <application name="Unigine OilRush (32-bit)" executable="OilRush_x86">
+        </application>
+        <application name="Unigine OilRush (64-bit)" executable="OilRush_x64">
+        </application>
+        <application name="Savage 2" executable="savage2.bin">
+        </application>
+        <application name="Topogun (32-bit)" executable="topogun32">
+        </application>
+        <application name="Topogun (64-bit)" executable="topogun64">
+        </application>
+    </device>
+</driconf>

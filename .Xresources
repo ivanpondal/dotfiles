@@ -1,0 +1,61 @@
+*foreground: #f2f2f2
+*background: #101010
+
+! Normal
+! color0    black
+! color1    red
+! color2    green
+! color3    yellow
+! color4    blue
+! color5    purple
+! color6    cyan
+! color7    white
+
+!*color0:    #6c6c6c
+!*color1:    #e9897c
+!*color2:    #b6e77d
+!*color3:    #ecebbe
+!*color4:    #a9cdeb
+!*color5:    #ea96eb
+!*color6:    #c9caec
+!*color7:    #f2f2f2
+
+! Light
+! color8    black
+! color9    red
+! color10    green
+! color11    yellow
+! color12    blue
+! color13    purple
+! color14    cyan
+! color15    white
+
+!*color8:    #747474
+!*color9:    #f99286
+!*color10:    #c3f786
+!*color11:    #fcfbcc
+!*color12:    #b6defb
+!*color13:    #fba1fb
+!*color14:    #d7d9fc
+!*color15:    #e2e2e2
+
+! Konsole dark pastel theme
+*color0:  #3f3f3f
+*color1:  #705050
+*color2:  #60b48a
+*color3:  #dfaf8f
+*color4:  #9ab9d7
+*color5:  #dc8cc4
+*color6:  #8cd1d3
+*color7:  #dcdccd
+*color8:  #709080
+*color9:  #dca3a3
+*color10: #72d5a2
+*color11: #f0dfaf
+*color12: #94c0f3
+*color13: #ec93d5
+*color14: #93e1e3
+*color15: #ffffff
+
+URxvt.scrollBar: false
+URxvt*scrollWithBuffer: true
