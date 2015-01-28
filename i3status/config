@@ -1,0 +1,30 @@
+general {
+	output_format = "i3bar"
+	colors = true
+	color_good = "#f9f9f9"
+	color_bad = "#d64937"
+	interval = 5
+}
+
+order += "ethernet enp2s8"
+order += "battery 0"
+order += "tztime local"
+
+ethernet enp2s8 {
+	format_up = "ethernet up"
+	format_down = "ethernet down"
+}
+
+battery 0 {
+	format = "battery %status %percentage"
+	format_down = "battery disconnected"
+	integer_battery_capacity = true
+	path = "/sys/class/power_supply/BAT%d/uevent"
+	low_threshold = 10
+	last_full_capacity = true
+}
+
+
+tztime local {
+	format = "%d-%m-%Y %H:%M"
+}
