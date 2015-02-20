@@ -7,12 +7,18 @@ general {
 }
 
 order += "ethernet enp2s8"
+order += "wireless wlp2s2"
 order += "battery 0"
 order += "tztime local"
 
 ethernet enp2s8 {
 	format_up = "ethernet up"
 	format_down = "ethernet down"
+}
+
+wireless wlp2s2 {
+	format_up = "wireless %essid"
+	format_down = "wireless down"
 }
 
 battery 0 {
@@ -23,7 +29,6 @@ battery 0 {
 	low_threshold = 10
 	last_full_capacity = true
 }
-
 
 tztime local {
 	format = "%d-%m-%Y %H:%M"
