@@ -19,5 +19,8 @@
 *color14: #8CD0D3
 *color15: #DCDCCC
 
-URxvt.scrollBar: false
+URxvt*scrollBar: false
 URxvt*scrollWithBuffer: true
+URxvt*buffered: false
+URxvt*perl-ext:
+URxvt*perl-ext-common:
