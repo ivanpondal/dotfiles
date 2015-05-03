@@ -1,4 +1,4 @@
-ln -r -i -s -t ~ bin
+ln -r -i -s -t ~ bin .vim
 
 ln -r -i -s -t ~/.config i3 i3status
 
