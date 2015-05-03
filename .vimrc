@@ -3,6 +3,9 @@ syntax enable
 set background=dark
 colorscheme nu
 
+"allow hidden buffers
+set hidden
+
 set number
 set showmatch
 
