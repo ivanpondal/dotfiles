@@ -12,8 +12,8 @@ order += "battery 0"
 order += "tztime local"
 
 ethernet enp2s8 {
-	format_up = "ethernet up"
-	format_down = "ethernet down"
+	format_up = "wired up"
+	format_down = "wired down"
 }
 
 wireless wlp2s2 {
