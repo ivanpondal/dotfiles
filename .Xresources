@@ -25,3 +25,5 @@ URxvt*buffered: false
 URxvt*perl-ext:
 URxvt*perl-ext-common:
 URxvt*font: -*-terminus-*-*-*-*-12-*-*-*-*-*-*-*
+
+UXTerm*font: -*-terminus-medium-r-*-*-14-*-*-*-*-*-*-*
