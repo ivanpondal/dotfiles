@@ -24,3 +24,4 @@ URxvt*scrollWithBuffer: true
 URxvt*buffered: false
 URxvt*perl-ext:
 URxvt*perl-ext-common:
+URxvt*font: -*-terminus-*-*-*-*-12-*-*-*-*-*-*-*
