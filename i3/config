@@ -134,6 +134,10 @@ bindsym Mod1+Shift+r restart
 # exit i3 (logs you out of your X session)
 bindsym Mod1+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 
+# this allows yout to switch back and forth between workspaces
+workspace_auto_back_and_forth yes
+bindsym Mod1+Tab workspace back_and_forth
+
 # resize window (you can also use the mouse for that)
 mode "resize" {
         # These bindings trigger as soon as you enter the resize mode
@@ -183,6 +187,7 @@ client.unfocused	 #1f1f1f #1f1f1f #505050 #1f1f1f
 
 #font pango: Cantarell Sans Mono 8
 focus_follows_mouse no
+
 #####################################################################
 # automatically start i3-config-wizard to offer the user to create a
 # keysym-based config which used his favorite modifier (alt or windows)
