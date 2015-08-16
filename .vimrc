@@ -1,7 +1,6 @@
 syntax enable
 
-set background=dark
-colorscheme nu
+colorscheme monokai
 
 "allow hidden buffers
 set hidden
