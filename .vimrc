@@ -33,6 +33,9 @@ set hlsearch
 "prettier whitespace characters
 set listchars=eol:¬,tab:➝\ ,trail:~,extends:>,precedes:<,space:·
 
+"match angle brackets
+set mps+=<:>
+
 "vundle config
 set nocompatible
 filetype off
