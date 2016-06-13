@@ -30,6 +30,9 @@ set lazyredraw
 set incsearch
 set hlsearch
 
+"prettier whitespace characters
+set listchars=eol:¬,tab:➝\ ,trail:~,extends:>,precedes:<,space:·
+
 "vundle config
 set nocompatible
 filetype off
