@@ -2,6 +2,10 @@ syntax enable
 
 colorscheme monokai
 
+"change default order of temp files location
+set directory=/var/tmp//,/tmp//,.
+set backupdir=/var/tmp//,/tmp//,.
+
 "allow hidden buffers
 set hidden
 
