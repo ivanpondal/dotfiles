@@ -40,6 +40,9 @@ set listchars=eol:¬,tab:➝\ ,trail:~,extends:>,precedes:<,space:·
 "match angle brackets
 set mps+=<:>
 
+"set spellcheck to spanish
+set spelllang=es
+
 "vundle config
 set nocompatible
 filetype off
