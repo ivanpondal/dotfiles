@@ -25,3 +25,5 @@
 	suntracked = cyan
 [push]
 	default = current
+[core]
+	editor = vim
