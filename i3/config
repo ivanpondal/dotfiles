@@ -27,7 +27,7 @@ font -*-terminus-*-*-*-*-12-*-*-*-*-*-*-*
 set $up l
 set $down k
 set $left j
-set $right ntilde
+set $right semicolon
 
 # use Mouse+Mod1 to drag floating windows to their wanted position
 floating_modifier Mod1
@@ -62,7 +62,7 @@ bindsym Mod1+Right focus right
 bindsym Mod1+Shift+$left move left
 bindsym Mod1+Shift+$down move down
 bindsym Mod1+Shift+$up move up
-bindsym Mod1+Shift+Ntilde move right
+bindsym Mod1+Shift+$right move right
 
 # alternatively, you can use the cursor keys:
 bindsym Mod1+Shift+Left move left
