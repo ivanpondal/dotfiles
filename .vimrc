@@ -54,7 +54,6 @@ Plugin 'gmarik/Vundle.vim'
 
 Plugin 'kien/ctrlp.vim'
 let g:ctrlp_working_path_mode = 0
-let g:ctrlp_user_command = ['.git/', 'git --git-dir=%s/.git ls-files -oc --exclude-standard']
 
 call vundle#end()
 filetype plugin indent on
