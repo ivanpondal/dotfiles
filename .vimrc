@@ -28,6 +28,7 @@ set noexpandtab
 
 "word wrap
 set textwidth=80
+set colorcolumn=80
 
 "faster rendering settings
 set ttyfast
