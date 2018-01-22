@@ -16,6 +16,9 @@ set autoindent
 set smartindent
 set smarttab
 
+"allow deleting in insert mode
+set backspace=indent,eol,start
+
 "tabstop equals how many spaces a tab represents
 "softtabstop and shiftwidth replace tabs for spaces when expandtab is used
 set tabstop=4
