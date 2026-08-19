@@ -1,5 +1,6 @@
 ---
-description: Outside-in TDD with an explicit stack
+name: tdd-stack
+description: Outside-in TDD with an explicit stack file, in any language
 ---
 
 # TDD Stack — Live Stack File for Recursive TDD
@@ -13,9 +14,10 @@ The stack file is just `pstack` for your TDD session — a sanity check at every
 transition.
 
 Use when doing **deep recursive outside-in TDD** across multiple layers — when a
-single feature unfolds across an integration test, a service, builders,
-repositories, and models. The stack file keeps the recursion legible across long
-sessions and across context window resets.
+single feature unfolds from an outer acceptance test down through the units it
+exposes: a service, its collaborators, data access, domain types, whatever the
+project's layering calls them. The stack file keeps the recursion legible across
+long sessions and across context window resets.
 
 Don't use it for shallow tasks (one or two layers). The ceremony costs more than
 it saves.
@@ -33,16 +35,18 @@ Before the first test, do two things:
 1. **State the role split in one line and invite override.** Don't assume the
    default. Example: *"I'll propose tests and impl; you orchestrate and approve.
    Say the word if you want to write tests yourself instead."*
-2. **Inventory every existing `*Test.kt` that could be a peer rung in the
-   recursion — and broaden beyond the feature's namespace.** Peer tests don't
-   always live next to feature code: repository tests typically live under a
-   repository folder, value-object tests under the model package. Scoping the
-   inventory glob to the feature's subdirectory silently misses these. Instead
-   glob broadly for the peer *types* you expect plus a feature-namespaced sweep.
-   Treat the inventory as load-bearing: a missing rung in the stack is a missing
-   rung in the discipline. Populate every candidate layer in the stack file up
-   front with `🔜` — deletion-on-irrelevance is cheaper than retroactive
-   addition.
+2. **Inventory every existing test file that could be a peer rung in the
+   recursion — and broaden beyond the feature's namespace.** Match the project's
+   own test convention (`*Test.kt`, `*_test.go`, `test_*.py`, `*.spec.ts`,
+   `*_spec.rb`, …) and glob for *that* pattern, not for one you assumed. Peer
+   tests don't always live next to feature code: data-access tests typically
+   live under a data-access directory, value-object tests under the domain-types
+   directory. Scoping the inventory glob to the feature's subdirectory silently
+   misses these. Instead glob broadly for the peer *types* you expect plus a
+   feature-namespaced sweep. Treat the inventory as load-bearing: a missing rung
+   in the stack is a missing rung in the discipline. Populate every candidate
+   layer in the stack file up front with `🔜` — deletion-on-irrelevance is
+   cheaper than retroactive addition.
 
 ## Re-inventory at layer drops
 
@@ -96,41 +100,45 @@ The cycle applies at **every layer**, not just the top:
 
 ### Anti-patterns to avoid
 These slip in silently — call them out and back off:
-- Adding `require(...)` / validation that no test asserts on. If no test asks
-  for "rejects blank name", don't write the require.
+- Adding a precondition guard (`require` / `assert` / `raise ValueError` /
+  `if err != nil { return err }` / `throw`) that no test asserts on. If no test
+  asks for "rejects blank name", don't write the guard.
 - Introducing a collaborator (repository, helper, abstraction) the test didn't
   ask for or mock.
-- Batch-creating scaffolding (enums, DTOs, builders) before the first test runs.
-  Add only what the test in front of you compiles against.
+- Batch-creating scaffolding (enums, structs/DTOs, builders, fixtures) before
+  the first test runs. Add only what the test in front of you actually
+  references.
 - Picking names (a property key, an id format, a method name) inside the impl
   when the test didn't pin them — those names belong to the user.
-- Speculative defensive guards: `if (set.isNotEmpty()) forwardSet(set)` when the
-  receiver already no-ops on empty. Pass through unconditionally; the guard is
-  noise.
+- Speculative defensive guards: `if isNotEmpty(set) { forward(set) }` when the
+  receiver already no-ops on empty input. Pass through unconditionally; the
+  guard is noise.
 - Mirroring an existing lower-layer validation onto a new factory because
-  "consistency". Existing builder/repo validations are legacy details, not
-  precedent for new methods. For a new service method, parameter validation
-  defaults to the **service entry point** unless the user directs otherwise.
-- Adding the `require(...)` on the first impl pass before any test demands it.
-  Even when you know the edge case is coming, write the test first; let it go
-  red; then add the guard.
+  "consistency". Existing builder/data-access validations are legacy details,
+  not precedent for new methods. For a new method, parameter validation defaults
+  to the **public entry point of the unit under test** unless the user directs
+  otherwise.
+- Adding the guard on the first impl pass before any test demands it. Even when
+  you know the edge case is coming, write the test first; let it go red; then
+  add the guard.
 - Inferring "this layer has no test convention" from absence in your initial
   inventory. Inventories are bounded by their globs; absence in your inventory
   is not absence in the codebase. Before implementing a new collaborator without
-  a peer-layer test, broad-glob  to confirm the convention is genuinely "no
-  tests here". When in doubt, write the peer test.
-- Copying a peer *test's* helper shape without its reason. A peer's
-  `run<Subject>Test { }` wrapper may exist because its subject needs an injected
+  a peer-layer test, broad-glob to confirm the convention is genuinely "no tests
+  here". When in doubt, write the peer test.
+- Copying a peer *test's* helper shape without its reason. A peer's test-harness
+  wrapper (`runSubjectTest { }`, a fixture or context manager, a `setUp` that
+  builds five collaborators) may exist because its subject needs an injected
   runtime dependency the test has to build and hand in (an execution context, a
   clock), or because it shares five stubs across every test. If your subject
   needs no such dependency and two stubs, the wrapper is indirection with no
   payoff — an unused parameter and a subject that arrives as a callback argument
   instead of being visibly constructed. Before adopting a peer's fixture or
   helper structure, name the specific problem it solves *there* and confirm you
-  have that problem *here*. Same for mocks held as
-  class-level fields: a mock referenced only inside the creation method is a
-  local, not a field. Prefer the smallest helper that removes the duplication you
-  actually have — usually a plain `make<Subject>()`.
+  have that problem *here*. Same for mocks held as suite-scoped fields: a mock
+  referenced only inside the creation method is a local, not a field. Prefer the
+  smallest helper that removes the duplication you actually have — usually a
+  plain `makeSubject()` factory.
 - Wiring a production call site to a method that is still a stub. The outer
   *test* stays red by design; production wiring must not. If the composition root
   needs to call `stop()`, drive `stop()` down through the recursion first.
@@ -138,37 +146,44 @@ These slip in silently — call them out and back off:
   because nothing in the suite exercises the composition root.
 - Porting a peer file's error-handling branches along with its happy path. When
   mirroring an existing implementation for the current test's shape, it's
-  tempting to copy the whole method — the try/throw, the status branch, the
+  tempting to copy the whole method — the error return, the status branch, the
   failure-path logic — because "the peer has it, it'll obviously be needed." It
   will be needed, but not yet: write only the branch the test in front of you
   demands, and let the *next* test (the failure case) demand the rest. Copying
   the full shape produces implementation with zero coverage on its error path,
-  discoverable only in retrospect — e.g. a domain method's failure throw and a
+  discoverable only in retrospect — e.g. a domain method's failure path and a
   callback handler's status branch both get written from a peer in one pass,
   and only their happy paths ever get a driving test.
 
 ## Test Naming Style
 - Use **given/when/should** structure: `given X, when Y it should Z`
-- Keep names concise — drop articles (e.g., "given blank session name" not
-  "given a blank session name")
-- No commas before "it should" — e.g., `when creating session it should fail
-  with argument exception`
+- Keep names concise — drop articles (e.g., "given blank name" not "given a
+  blank name")
+- No commas before "it should" — e.g., `when creating account it should fail
+  with argument error`
 - Don't add given/when/then comments inside the test body
 
 Examples:
-- ✅ `given blank name, when creating signal it should throw IllegalArgumentException`
-- ❌ `creates a Signal with the right values` (no given/when/should)
-- ❌ `given a blank name, when creating signal, it should throw` (articles + extra comma)
+- ✅ `given blank name, when creating account it should throw ArgumentError`
+- ❌ `creates an Account with the right values` (no given/when/should)
+- ❌ `given a blank name, when creating account, it should throw` (articles +
+  extra comma)
+
+If the codebase already has an established test-naming convention (RSpec
+`describe`/`it` nesting, Go table-driven subtest names, `test_` prefixes),
+match it rather than importing this one — consistency inside a suite beats
+consistency across projects. Note the deviation once in the stack file so it
+isn't re-litigated each cycle.
 
 ## Test Style
 
-- **Assert exception messages**, not just types.
-  `.isInstanceOf(IllegalArgumentException::class.java).hasMessage("...")` — the
-  type alone tells you nothing about which validation fired.
+- **Assert on the error's message or payload**, not just its type. The type
+  alone tells you nothing about which validation fired — two different guards
+  in the same method raise the same class.
 - **Inline the subject-under-test's call directly in each test.** Don't extract
   a `recordRun()` / `act()` helper that hides the call. Hoist repeated parameter
-  values to class-level `private val`s so the call stays visible but params
-  don't repeat.
+  values to suite-scoped constants so the call stays visible but params don't
+  repeat.
 - **A plan's proposed stack rungs and API shapes are suggestions, not commitments.**
   `/tdd-stack` is sometimes invoked against a plan document that already proposes
   rungs, collaborators, even signatures. Seeding the stack file from that is fine —
@@ -184,10 +199,10 @@ Examples:
 
 - **Pausing for contract confirmation is a hard gate, not a suggestion.** Before
   writing any test that introduces:
-  - A new method on a public class
+  - A new method on a public type
   - A new parameter on an existing public method
   - A new mock for a collaborator that didn't have one
-  - A new DTO field or enum type that appears in a public signature
+  - A new struct/DTO field or enum type that appears in a public signature
 
   → STOP. Use `AskUserQuestion` (or a direct text question requiring explicit
   confirmation) before writing the test. The mocks you write *are* the design —
@@ -212,7 +227,7 @@ Examples:
   introduced, pause regardless of Auto mode.
 
 - **"Let the test drive shape" applies to internal shape, not API surface.** The
-  user feedback to avoid pre-deciding DTO fields or internal naming is *about
+  user feedback to avoid pre-deciding struct fields or internal naming is *about
   discovering the right shape for things the test legitimately needs to
   construct*. It is NOT permission to silently introduce new public method
   signatures, parameters, or collaborators without confirmation. Internal shape
@@ -228,6 +243,9 @@ Examples:
 
 ## Design Philosophy
 - DDD: entities, value objects, aggregates matter. Respect bounded contexts.
+  Where the codebase already models its domain differently, follow the codebase
+  — never rename or re-partition existing domain concepts to fit this
+  vocabulary.
 - API design (how code is used) matters more than implementation details.
 - YAGNI: only build what tests require.
 
@@ -250,7 +268,7 @@ each layer drop.
 
 ## Stack (outer → inner)
 
-1. 🔴 / 🟡 / ✅ / 🔜  <test class name>
+1. 🔴 / 🟡 / ✅ / 🔜  <test suite / file>
    - <one-line description>
    - File: <path>
    - Optionally: list of test names with status (✅ / ⏭️ next / 🔜 future / 🔴 red)
@@ -259,8 +277,8 @@ each layer drop.
 ```
 
 **List every candidate layer up front**, not just visited ones. At session
-setup, inventory every existing `*Test.kt` that could be a peer rung and seed
-each one as a `🔜` rung.
+setup, inventory every existing test file that could be a peer rung — using the
+project's own test-file convention — and seed each one as a `🔜` rung.
 
 Don't scope the inventory glob to the feature subdirectory — peer tests live
 across many packages. Pattern-scoped globs catch them; feature-namespace globs
@@ -285,10 +303,10 @@ Brief notes on contracts the recursion has surfaced but not yet resolved.
 - 🔜 future test, not yet picked
 - ⏸️ deferred (TODO at the bottom of the stack)
 - ❌ deleted — refactored out, no longer applicable. Keep the rung in the stack
-  with a one-line rationale (e.g., "removed: anchored signal-scoped query
-  supersedes naked id lookup"). Deletion is sometimes the right cycle outcome,
-  especially when reviewer feedback exposes a correctness issue in API you just
-  added and the cleanest fix is to remove the API rather than patch it.
+  with a one-line rationale (e.g., "removed: parent-scoped query supersedes
+  naked id lookup"). Deletion is sometimes the right cycle outcome, especially
+  when reviewer feedback exposes a correctness issue in API you just added and
+  the cleanest fix is to remove the API rather than patch it.
 
 ### The bar for ✅
 
@@ -330,7 +348,7 @@ means earlier rungs were marked ✅ too early, and the bar above was skipped.
 ## What goes in vs. what doesn't
 
 **In the stack:**
-- Test classes / suites at each layer
+- Test suites / files at each layer
 - Their red/green status
 - File paths so you can reopen the right files
 - Cross-cutting deferred items
@@ -351,7 +369,7 @@ carefully:
 
 **1. Triage cascades before executing.** For each item, label it `standalone`
 (touches one file, no ripple) or `cascading` (would force changes to multiple
-test classes, an existing API contract, or rungs already marked ✅).  For
+test suites, an existing API contract, or rungs already marked ✅).  For
 cascading items, present a brief cascade map *in the conversation* before
 executing — and when the cascade has more than one viable shape, name the
 options. Let the user pick the strategy. The cost of one round-trip is
@@ -366,7 +384,7 @@ untouched.
 correctness fix sometimes deletes an API entirely (e.g., a naked `findById`
 lookup gets replaced by an existing parent-scoped query). When this happens,
 mark the rung ❌ with a one-line rationale and leave it in the stack —
-future-you needs to see *why* that test class no longer exists, not just that
+future-you needs to see *why* that test suite no longer exists, not just that
 it's gone.
 
 **4. Don't silently re-derive contract decisions.** If the feedback contradicts
