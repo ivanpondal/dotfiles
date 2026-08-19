@@ -2,6 +2,9 @@ syntax enable
 
 colorscheme monokai
 
+"enable mouse in all modes (touchpad scrolling)
+set mouse=a
+
 "change default order of temp files location
 set directory=/var/tmp//,/tmp//,.
 set backupdir=/var/tmp//,/tmp//,.
