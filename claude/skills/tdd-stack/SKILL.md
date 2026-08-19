@@ -307,6 +307,7 @@ Brief notes on contracts the recursion has surfaced but not yet resolved.
   naked id lookup"). Deletion is sometimes the right cycle outcome, especially
   when reviewer feedback exposes a correctness issue in API you just added and
   the cleanest fix is to remove the API rather than patch it.
+```
 
 ### The bar for ✅
 
