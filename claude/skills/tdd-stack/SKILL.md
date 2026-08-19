@@ -103,9 +103,14 @@ down is what enforces the recursion.
 
 ## Cycle
 1. Happy path test is written (Agent proposes by default; user may also write
-   it). Test defines the API contract.
-2. User confirms the API looks right; test is run and confirmed failing for the
-   right reason.
+   it). Test defines the API contract. **If it introduces new public surface,
+   the hard gate fires before the test is written** (see ## Test Style —
+   "Pausing for contract confirmation is a hard gate"); that pause happens at
+   every pace, Full included.
+2. Test is run and confirmed failing for the right reason. Any *further*
+   "does this API look right?" check-in, beyond what the hard gate already
+   requires, is pace-governed (see ## Pace) — at Slow ask every time, at Full
+   don't ask when the test stays inside an already-agreed contract.
 3. Agent implements the minimum to make it green.
 4. Agent suggests edge cases — user picks which ones matter.
 5. Agent writes the selected edge case tests + implementation in one batch.
@@ -168,6 +173,26 @@ a short note (e.g. "edge cases deferred until tracer bullet lands") rather than
 default, not a rule: say when you're applying it, and if the user asks to fully
 close a frame before recursing (e.g. because a mock's failure contract is
 genuinely load-bearing for the next layer's design), do that instead.
+
+## The bar for ✅
+
+"Sufficiently covered" is not "the happy path passes". Before marking a frame ✅,
+**read the implementation that frame's tests drove and enumerate its branches** —
+guards, error handlers, status checks, early returns, absence short-circuits.
+Every branch without a test is either a missing test or dead code; decide which,
+out loud. Then ask the layer-crossing question: for each collaborator this layer
+calls, what does this layer do when that collaborator *fails*? A frame whose
+happy path is green but whose failure paths are untested is 🟡, not ✅.
+
+This is the check that catches error handling copied from a peer, and it is
+where genuine bugs hide: a partially-failed operation that leaks a resource,
+or leaves a field in a state that blocks retry, will pass every happy-path test
+at every layer.
+
+A test that passes the moment you write it is **not a cycle** — it is a coverage
+gap you just found in code that already shipped. Say so explicitly in the recap
+("passed immediately; that branch already existed"). One is fine. A run of them
+means earlier frames were marked ✅ too early, and the bar above was skipped.
 
 ## Rules
 - Never refactor without explicit approval. Suggest only.
@@ -389,7 +414,7 @@ one.
 Live stack of the outside-in recursion. Updated each red→green transition and
 each layer drop.
 
-## Currently at: <layer name>
+## Currently at: <frame>
 
 ## Pace: Slow / Normal / Full
 
@@ -403,18 +428,12 @@ each layer drop.
 2. ...
 ```
 
-**List every candidate layer up front**, not just visited ones. At session
-setup, inventory every existing test file that could be a peer frame — using the
-project's own test-file convention — and seed each one as a `🔜` frame.
+**List every candidate frame up front**, not just visited ones — seed each one
+from the Session Setup inventory (see ## Session Setup) as a `🔜` frame.
 
-Don't scope the inventory glob to the feature subdirectory — peer tests live
-across many packages. Pattern-scoped globs catch them; feature-namespace globs
-miss them.
-
-A missing frame in the stack is a missing frame in the recursion — if the format
-only tracks layers you've reached, you can't see the ones you've skipped. Delete
-a frame once you've confirmed it's irrelevant; that's cheaper than retroactively
-realising you skipped it.
+If the format only tracks frames you've reached, you can't see the ones you've
+skipped. Delete a frame once you've confirmed it's irrelevant; that's cheaper
+than retroactively realising you skipped it.
 
 ```markdown
 ## Open design tensions (when relevant)
@@ -424,8 +443,8 @@ Brief notes on contracts the recursion has surfaced but not yet resolved.
 ## Status icons
 
 - 🔴 red — failing for the right reason
-- 🟡 active layer being worked
-- ✅ green — sufficiently covered (see the bar below)
+- 🟡 active frame being worked
+- ✅ green — sufficiently covered (see ## The bar for ✅)
 - ⏭️ next test the user picked
 - 🔜 future test, not yet picked
 - ⏸️ deferred (TODO at the bottom of the stack)
@@ -436,26 +455,6 @@ Brief notes on contracts the recursion has surfaced but not yet resolved.
   the cleanest fix is to remove the API rather than patch it.
 ```
 
-### The bar for ✅
-
-"Sufficiently covered" is not "the happy path passes". Before marking a frame ✅,
-**read the implementation that frame's tests drove and enumerate its branches** —
-guards, error handlers, status checks, early returns, absence short-circuits.
-Every branch without a test is either a missing test or dead code; decide which,
-out loud. Then ask the layer-crossing question: for each collaborator this layer
-calls, what does this layer do when that collaborator *fails*? A frame whose
-happy path is green but whose failure paths are untested is 🟡, not ✅.
-
-This is the check that catches error handling copied from a peer, and it is
-where genuine bugs hide: a partially-failed operation that leaks a resource,
-or leaves a field in a state that blocks retry, will pass every happy-path test
-at every layer.
-
-A test that passes the moment you write it is **not a cycle** — it is a coverage
-gap you just found in code that already shipped. Say so explicitly in the recap
-("passed immediately; that branch already existed"). One is fine. A run of them
-means earlier frames were marked ✅ too early, and the bar above was skipped.
-
 ## When to update
 
 - After each red → green transition: flip the icon, note any new test that just
@@ -463,13 +462,10 @@ means earlier frames were marked ✅ too early, and the bar above was skipped.
 - When dropping down a layer (writing the next collaborator's test): add the new
   frame to the stack with 🟡.
 - **When introducing a new collaborator type (new repository, builder, helper):
-  immediately glob for peer-type tests across the codebase and add every
-  existing peer frame to the stack with `🔜`, even before reading those files.**
-  The session-start inventory was scoped to what you knew then; new
-  collaborators bring new frames. Don't infer "no tests at this layer" from
-  absence in your existing stack — broad-glob first.
+  re-inventory and add every existing peer frame with `🔜`, even before reading
+  those files** (see ## Re-inventory at layer drops).
 - When popping back up (the inner layer is sufficiently covered): mark it ✅ and
-  resume the outer layer's icon as 🟡.
+  resume the outer frame's icon as 🟡.
 - When the user changes pace mid-session: update the `## Pace:` line immediately, so a context
   reset resumes at the right pace rather than defaulting back to Normal.
 - When resolving an open design tension: rewrite that section to describe the
