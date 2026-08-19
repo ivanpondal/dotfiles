@@ -26,8 +26,8 @@ transition. The vocabulary follows from that:
 
 - **Layer** — an architectural tier: a service, its collaborators, data access,
   domain types, whatever the project's layering calls them.
-- **Frame** — one test suite in the stack. Frames are what the stack file lists;
-  layers are what they cover.
+- **Frame** — one test suite in the stack, normally one test file. Frames are
+  what the stack file lists; layers are what they cover.
 - **Peer frames** — several frames sitting at one layer (three repository test
   suites, say). A layer is not automatically one frame.
 - **Drop down** — recurse inward: a test exposes a collaborator, so you push a
@@ -89,6 +89,16 @@ Before the first test, do two things:
    in the stack is a missing frame in the discipline. Populate every candidate
    frame in the stack file up front with `🔜` — deletion-on-irrelevance is
    cheaper than retroactive addition.
+3. **Treat a plan document's proposed frames and API shapes as suggestions, not
+   commitments.** `/tdd-stack` is often invoked against a plan that already
+   proposes frames, collaborators, even signatures. Seeding the stack file from
+   it is fine — that is what step 2 asks for. But a frame on the list because the
+   plan mentioned it is not a frame a test has exposed, and pseudocode for a
+   collaborator's shape is not the user approving that shape. Below whatever
+   single contract the plan flags as open, every proposed collaborator and API
+   design goes through the hard gate (see ## Test Style) before a test locks it
+   in — unless the user has said not to ask for a given case (e.g. "just follow
+   the plan's signatures, don't stop to confirm each one").
 
 ## Re-inventory at layer drops
 
@@ -204,8 +214,7 @@ means earlier frames were marked ✅ too early, and the bar above was skipped.
   compile.** If a cycle needs a new method, or a new message to an existing
   method, on *any* collaborator — brand-new or already in the stack, mocked or
   driven for real — that collaborator's own dedicated test suite gets the
-  driving test first (or, at minimum, in the same step as the implementation,
-  before moving on). A real (non-mocked) collaborator threaded through a higher
+  driving test first. A real (non-mocked) collaborator threaded through a higher
   layer's test is the easiest place for this to slip: the higher layer goes
   green, the new method quietly exists, and the collaborator's own contract
   was never independently proven — only reconstructed afterward as a
@@ -218,75 +227,52 @@ means earlier frames were marked ✅ too early, and the bar above was skipped.
 
 ### Anti-patterns to avoid
 These slip in silently — call them out and back off:
-- Adding a precondition guard (`require` / `assert` / `raise ValueError` /
-  `if err != nil { return err }` / `throw`) that no test asserts on. If no test
-  asks for "rejects blank name", don't write the guard.
-- Introducing a collaborator (repository, helper, abstraction) the test didn't
-  ask for or mock.
-- Batch-creating scaffolding (enums, structs/DTOs, builders, fixtures) before
-  the first test runs. Add only what the test in front of you actually
-  references.
-- Picking names (a property key, an id format, a method name) inside the impl
-  when the test didn't pin them — those names belong to the user.
-- Speculative defensive guards: `if isNotEmpty(set) { forward(set) }` when the
-  receiver already no-ops on empty input. Pass through unconditionally; the
-  guard is noise.
-- Mirroring an existing lower-layer validation onto a new factory because
-  "consistency". Existing builder/data-access validations are legacy details,
-  not precedent for new methods. For a new method, parameter validation defaults
-  to the **public entry point of the unit under test** unless the user directs
-  otherwise.
-- Adding the guard on the first impl pass before any test demands it. Even when
-  you know the edge case is coming, write the test first; let it go red; then
-  add the guard.
-- Inferring "this layer has no test convention" from absence in your initial
-  inventory. Inventories are bounded by their globs; absence in your inventory
-  is not absence in the codebase. Before implementing a new collaborator without
-  a peer-layer test, broad-glob to confirm the convention is genuinely "no tests
-  here". When in doubt, write the peer test.
-- Copying a peer *production* pattern (a factory indirection, a repository, an
-  extra indirection layer) onto a new collaborator because a nearby type uses it
-  — without a reason specific to the collaborator in front of you. An injected
-  factory (a closure, a lambda, a supplier function, a one-method interface —
-  whatever the language calls it) earns its place when each call must construct
-  a genuinely new external resource: a platform handle, a connection, a client.
-  A plain domain object usually doesn't need one — construct it directly where
-  it's used, the way the codebase's own nearest domain-layer precedent already
-  does (check that precedent, don't assume the nearest *service*-layer pattern
-  generalizes down to the *domain* layer). Reach for the indirection only once a
-  concrete difficulty shows up under test (e.g. the test can't substitute a
-  fake without it) — let the need surface organically instead of front-loading
-  it because a plan document described the shape or a sibling file has one.
-- Copying a peer *test's* helper shape without its reason. A peer's test-harness
-  wrapper (`runSubjectTest { }`, a fixture or context manager, a `setUp` that
-  builds five collaborators) may exist because its subject needs an injected
-  runtime dependency the test has to build and hand in (an execution context, a
-  clock), or because it shares five stubs across every test. If your subject
-  needs no such dependency and two stubs, the wrapper is indirection with no
-  payoff — an unused parameter and a subject that arrives as a callback argument
-  instead of being visibly constructed. Before adopting a peer's fixture or
-  helper structure, name the specific problem it solves *there* and confirm you
-  have that problem *here*. Same for mocks held as suite-scoped fields: a mock
-  referenced only inside the creation method is a local, not a field. Prefer the
-  smallest helper that removes the duplication you actually have — usually a
-  plain `makeSubject()` factory. (Meszaros names both failure modes: General
-  Fixture for the oversized shared setup, Obscure Test for the subject you can
-  no longer see being built — see ## Refactoring references.)
-- Wiring a production call site to a method that is still a stub. The outer
-  *test* stays red by design; production wiring must not. If the composition root
-  needs to call `stop()`, drive `stop()` down through the recursion first.
-  Otherwise you ship a crash that compiles cleanly and passes every unit test,
-  because nothing in the suite exercises the composition root.
-- Porting a peer file's error-handling branches along with its happy path. When
-  mirroring an existing implementation for the current test's shape, it's
-  tempting to copy the whole method — the error return, the status branch, the
-  failure-path logic — because "the peer has it, it'll obviously be needed." It
-  will be needed, but not yet: write only the branch the test in front of you
-  demands, and let the *next* test (the failure case) demand the rest. Copying
-  the full shape produces implementation with zero coverage on its error path,
-  discoverable only in retrospect — e.g. a domain method's failure path and a
-  callback handler's status branch both get written from a peer in one pass,
-  and only their happy paths ever get a driving test.
+- **Don't write a guard no test asked for.** Not a precondition check
+  (`require` / `assert` / `raise ValueError` / `if err != nil { return err }` /
+  `throw`) that nothing asserts on; not a defensive wrapper like
+  `if isNotEmpty(set) { forward(set) }` when the receiver already no-ops on
+  empty input; not the guard you already know the next edge case will need. Even
+  then, write the test first, let it go red, and add the guard after.
+- **Don't introduce a collaborator** (repository, helper, abstraction) the test
+  didn't ask for or mock.
+- **Don't batch-create scaffolding** (enums, structs/DTOs, builders, fixtures)
+  before the first test runs. Add only what the test in front of you references.
+- **Don't pick names in the implementation** — a property key, an id format, a
+  method name — that the test didn't pin. Those names belong to the user.
+- **Don't mirror a lower-layer validation onto a new factory for "consistency".**
+  Existing builder/data-access validations are legacy details, not precedent for
+  new methods. Parameter validation defaults to the **public entry point of the
+  unit under test** unless the user directs otherwise.
+- **Don't infer "this layer has no test convention" from your own inventory.**
+  Inventories are bounded by their globs; absence in yours is not absence in the
+  codebase. Broad-glob to confirm before implementing a collaborator without a
+  peer-layer test. When in doubt, write the peer test.
+- **Don't copy a peer's production pattern without its reason.** An injected
+  factory (closure, lambda, supplier function, one-method interface) earns its
+  place only when each call must construct a new external resource — a platform
+  handle, a connection, a client. A plain domain object doesn't; construct it
+  directly, following the nearest *domain*-layer precedent rather than assuming
+  the nearest *service*-layer one generalizes down. Reach for the indirection
+  when a concrete difficulty shows up under test, not because a plan described
+  the shape or a sibling file has one.
+- **Don't copy a peer test's helper shape without its reason.** A wrapper
+  (`runSubjectTest { }`, a fixture or context manager, a `setUp` building five
+  collaborators) usually exists because its subject needs an injected runtime
+  dependency, or because it shares many stubs. If yours needs neither, the
+  wrapper is indirection with no payoff. Name the problem it solves *there* and
+  confirm you have it *here*. Likewise a mock referenced only inside the creation
+  method is a local, not a suite-scoped field. Prefer a plain `makeSubject()`.
+  (Meszaros: General Fixture and Obscure Test — see ## Refactoring references.)
+- **Don't wire a production call site to a method that is still a stub.** The
+  outer *test* stays red by design; production wiring must not. If the
+  composition root needs `stop()`, drive `stop()` down through the recursion
+  first — otherwise you ship a crash that compiles cleanly and passes every unit
+  test, because nothing in the suite exercises the composition root.
+- **Don't port a peer's error-handling branches along with its happy path.** The
+  error return, the status branch, the failure-path logic will be needed — but
+  not yet. Write only the branch the test in front of you demands and let the
+  *next* test demand the rest. Copying the full shape produces implementation
+  with zero coverage on its error path, found only in retrospect.
 
 ## Test Naming Style
 - Use **given/when/should** structure: `given X, when Y it should Z`
@@ -317,19 +303,6 @@ isn't re-litigated each cycle.
   a `recordRun()` / `act()` helper that hides the call. Hoist repeated parameter
   values to suite-scoped constants so the call stays visible but params don't
   repeat.
-- **A plan's proposed stack frames and API shapes are suggestions, not commitments.**
-  `/tdd-stack` is sometimes invoked against a plan document that already proposes
-  frames, collaborators, even signatures. Seeding the stack file from that is fine —
-  pre-listing frames to follow established patterns is useful, and it's still what
-  Session Setup asks for. But a frame on the list because the plan mentioned it is
-  not the same as a frame a test has actually exposed, and a plan showing pseudocode
-  for a collaborator's shape is not the user approving that shape. Below whatever
-  single contract the plan explicitly flags as open (if any), treat every other
-  proposed collaborator and API design the same way as one the agent invented on
-  the spot: it still goes through the hard gate below before a test locks it in —
-  unless the user has explicitly said not to ask for a given case (e.g. "just
-  follow the plan's signatures, don't stop to confirm each one").
-
 - **Pausing for contract confirmation is a hard gate, not a suggestion.** Before
   writing any test that introduces:
   - A new method on a public type
@@ -420,7 +393,7 @@ each layer drop.
 
 ## Stack (outer → inner)
 
-1. 🔴 / 🟡 / ✅ / 🔜  <test suite / file>
+1. 🔴 / 🟡 / ✅ / 🔜  <test suite>
    - <one-line description>
    - File: <path>
    - Optionally: list of test names with status (✅ / ⏭️ next / 🔜 future / 🔴 red)
@@ -442,11 +415,13 @@ Brief notes on contracts the recursion has surfaced but not yet resolved.
 
 ## Status icons
 
+Icons mark frames; where a frame lists its individual tests, they mark those too.
+
 - 🔴 red — failing for the right reason
-- 🟡 active frame being worked
+- 🟡 active — being worked
 - ✅ green — sufficiently covered (see ## The bar for ✅)
-- ⏭️ next test the user picked
-- 🔜 future test, not yet picked
+- ⏭️ next — picked by the user
+- 🔜 future — not yet picked (a seeded frame, or a test not yet chosen)
 - ⏸️ deferred (TODO at the bottom of the stack)
 - ❌ deleted — refactored out, no longer applicable. Keep the frame in the stack
   with a one-line rationale (e.g., "removed: parent-scoped query supersedes
@@ -474,7 +449,7 @@ Brief notes on contracts the recursion has surfaced but not yet resolved.
 ## What goes in vs. what doesn't
 
 **In the stack:**
-- Test suites / files at each layer
+- Test suites at each layer
 - Their red/green status
 - File paths so you can reopen the right files
 - Cross-cutting deferred items
@@ -517,5 +492,7 @@ it's gone.
 a decision already in the "open design tensions" section or in a memory, surface
 the contradiction explicitly before resolving. The user may not realise their
 comment is reversing an earlier choice.
+
+## Task
 
 $ARGUMENTS
