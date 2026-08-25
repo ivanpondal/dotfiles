@@ -111,6 +111,11 @@ Add the new peer's test frames to the stack file the moment you introduce the
 collaborator — even if you haven't read those files yet. The act of writing them
 down is what enforces the recursion.
 
+Glob for the layer's **fixtures, builders and shared test constants** too, not
+just its test files. A bare mock for a type that already has a fixture
+hierarchy, or an inlined literal where a shared constant exists, is the usual
+cost of skipping this.
+
 ## Cycle
 1. Happy path test is written (Agent proposes by default; user may also write
    it). Test defines the API contract. **If it introduces new public surface,
@@ -134,6 +139,23 @@ down is what enforces the recursion.
    or after handing back control depends on pace (see ## Pace) — at Slow,
    stop here every time; at Normal, stop only if this cycle also crossed a
    layer boundary; at Full, keep going.
+
+### Stubbing to make a red test compile
+
+Where a test can't run until the name it calls exists, add that method as a
+**throwing stub** — the language's "not implemented" error — before writing the
+test. That isn't implementation; it's the minimum that lets the test fail.
+
+The stub must **throw, never return a plausible default**. Returning false, null
+or an empty collection makes the test fail on an assertion — a weak signal that
+reads like a logic bug — or, worse, pass vacuously. A "not implemented" error in
+the failure output is positive evidence the test reached the seam you meant.
+
+Add one stub at a time, and **track outstanding stubs in the stack file**: note
+each on the frame that will replace it, clear the note when that frame goes
+green. Otherwise a stub ships if the session ends mid-recursion (see the
+anti-pattern "Don't wire a production call site to a method that is still a
+stub").
 
 ## Recursive Application
 
@@ -208,7 +230,8 @@ means earlier frames were marked ✅ too early, and the bar above was skipped.
 - Never refactor without explicit approval. Suggest only.
 - Never invent new API surface in edge case tests. Stay within the contract the
   user defined.
-- Never write implementation before a failing test exists.
+- Never write implementation before a failing test exists. A throwing stub is
+  the one exception — see ## Cycle, "Stubbing to make a red test compile".
 - **"A failing test exists" means a test in the collaborator's own test file, not
   merely a higher layer's test that happens to require the new method to
   compile.** If a cycle needs a new method, or a new message to an existing
@@ -326,6 +349,14 @@ isn't re-litigated each cycle.
     method? Pausing before I write the test.") followed by waiting for an
     answer.
 
+  **A confirmed decision governs every mirrored layer.** Where one feature is
+  implemented across several platforms, a decision confirmed at one layer
+  governs **every mirrored layer**, not just the one you asked about. Check each
+  mirror against the stated principle before writing its test; when the plan's
+  frame list contradicts that principle, the plan is wrong. A frame list is
+  never pre-approval for a mirrored layer's API shape — the gate fires there
+  too.
+
 - **Auto mode does not override this gate.** Auto-mode's "minimize
   interruptions" applies to routine implementation work (writing a test that
   matches an already-agreed contract, running tests, fixing compile errors). It
@@ -338,6 +369,13 @@ isn't re-litigated each cycle.
   construct*. It is NOT permission to silently introduce new public method
   signatures, parameters, or collaborators without confirmation. Internal shape
   = let the test drive. Public API surface = pause and confirm.
+
+- **A setup helper constructs and returns its fixture.** Prefer building and
+  returning over mutating suite-scoped state, and pass every collaborator it
+  stubs as an **explicit parameter** rather than closing over suite-scoped
+  fields. A returning helper composes when called twice (two devices, two
+  sessions); a mutating one clobbers its own earlier setup. (Meszaros: General
+  Fixture, Obscure Test.)
 
 - **In async/concurrent code, a broken test hangs instead of failing.** Cycle
   step 2 ("confirmed failing for the right reason") silently degrades into
