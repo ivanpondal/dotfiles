@@ -335,11 +335,13 @@ isn't re-litigated each cycle.
   never pre-approval for a mirrored layer's API shape.
 
 - **A setup helper constructs and returns its fixture.** Prefer building and
-  returning over mutating suite-scoped state, and pass every collaborator it
-  stubs as an **explicit parameter** rather than closing over suite-scoped
-  fields. A returning helper composes when called twice (two devices, two
-  sessions); a mutating one clobbers its own earlier setup. (Meszaros: General
-  Fixture, Obscure Test.)
+  returning over mutating suite-scoped state: a helper that assigns to shared
+  fields makes a test's starting state depend on what ran before it, and the
+  test no longer says what it starts from. (Meszaros: General Fixture, Obscure
+  Test.)
+
+  **A codebase's documented fixture convention outranks this section** — match
+  it rather than importing a second shape into a suite that already has one.
 
 - **In async/concurrent code, a broken test hangs instead of failing.** Cycle
   step 2 ("confirmed failing for the right reason") silently degrades into
