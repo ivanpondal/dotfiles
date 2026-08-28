@@ -92,25 +92,57 @@ Before the first test, do three things:
    *types* you expect, plus a feature-namespaced sweep, plus the layer's
    fixtures, builders and shared test constants — a bare mock where a fixture
    hierarchy already exists, or an inline literal where a shared constant does,
-   is the usual cost of skipping that last one. Seed every candidate frame in
-   the stack file with `🔜`: a missing frame in the stack is a missing frame in
-   the discipline, and deletion-on-irrelevance is cheaper than retroactive
-   addition.
+   is the usual cost of skipping that last one. Seed every candidate frame into
+   the stack file's **`## Candidate frames (💭 unproven)`** section — *not* the
+   numbered stack: a missing frame in the stack is a missing frame in the
+   discipline, and deletion-on-irrelevance is cheaper than retroactive addition.
+   Seeded frames are unnumbered and unordered on purpose (see ## Promoting a
+   candidate frame, and `references/stack-file.md`).
 
    **Re-inventory at every layer drop.** The session-start inventory was scoped
    to what you knew then. When the recursion introduces a *new* collaborator
    type (repository, builder, helper), glob again for that peer type across the
-   whole codebase, and add its frames to the stack file the moment you introduce
-   the collaborator — even before reading those files. Writing them down is what
-   enforces the recursion.
+   whole codebase, and add its frames to the candidate section the moment you
+   introduce the collaborator — even before reading those files. Writing them
+   down is what enforces the recursion.
 3. **Treat a plan document's proposed frames and API shapes as suggestions, not
    commitments.** A frame on the list because the plan mentioned it is not a
    frame a test has exposed, and pseudocode for a collaborator's shape is not
    the user approving that shape. Seeding the stack file from a plan is fine —
-   that is what step 2 asks for — but below whatever single contract the plan
-   flags as open, every proposed collaborator and API design goes through the
-   hard gate (see ## Test Style) before a test locks it in, unless the user has
-   said not to ask (e.g. "just follow the plan's signatures").
+   that is what step 2 asks for — but a plan-derived frame enters as `💭` and
+   stays there until something demands it (see ## Promoting a candidate frame).
+   Below whatever single contract the plan flags as open, every proposed
+   collaborator and API design goes through the hard gate (see ## Test Style)
+   before a test locks it in, unless the user has said not to ask (e.g. "just
+   follow the plan's signatures").
+
+## Promoting a candidate frame
+
+Seeded frames record what *might* be needed. They are not a work queue, and the
+stack file keeps them unnumbered and outside the numbered stack so they cannot
+be read as one.
+
+**Promote a frame from `💭` to `🔜` only when you can name the concrete caller,
+data path or failing test that requires it.** "The plan lists it next" and "it
+is the next unticked number" are not such reasons. Say the reason out loud when
+you promote, and move the bullet into the numbered stack — promotion is a
+deliberate act, not a default.
+
+If you cannot name one, the next frame is somewhere else. Ask instead: what does
+the data already flowing through the code reach next, and what does it currently
+do when it gets there? That question finds the frame that is actually load-
+bearing, which is frequently *not* the one the plan put next — often it is new
+tests on a file the plan never listed, because the existing code silently drops
+what the previous frame started sending it.
+
+Working a frame nothing demands is how speculative abstractions get built: an
+interface to break a dependency cycle that does not exist, an adapter for a
+caller that never materialises. Both cost a rollback, and the rollback is the
+cheap outcome — the expensive one is the abstraction surviving into the merge.
+
+A candidate that never materialises is deleted, or marked `❌` with "never
+required" and a one-line reason. Sweep the candidate section when the tracer
+bullet bottoms out; frames nobody revisited are the ones most likely to be dead.
 
 ## Cycle
 1. Happy path test is written (Agent proposes by default; user may also write
@@ -180,6 +212,12 @@ bottoms out and the outermost test can plausibly go green end-to-end, sweep
 back **up** the stack picking up each frame's deferred edge cases in the same
 outer→inner order.
 
+"The next collaborator's test" means one that something already demands — not
+the next number in the file. **Never start a frame that is still `💭`** — promote
+it or find the real one (see ## Promoting a candidate frame). A frame the
+recursion drops into needs no promotion: it goes straight into the numbered
+stack as 🟡, because the drop itself is the demand.
+
 Ordering and pace are independent: this changes *what* you do next (happy path
 before edge cases), pace still governs how often control comes back to the user
 (see ## Pace).
@@ -227,8 +265,8 @@ means earlier frames were marked ✅ too early, and the bar above was skipped.
   green, the new method quietly exists, and the collaborator's own contract
   was never independently proven — only reconstructed afterward as a
   passes-immediately retrofit (see "the bar for ✅"). Add the collaborator's
-  frame to the stack the moment its new method is introduced, same as any other
-  layer drop.
+  frame to the numbered stack the moment its new method is introduced, same as
+  any other layer drop.
 - Keep implementation minimal — no speculative code, no premature abstractions.
 - Domain naming and boundaries are the user's decisions. Never rename domain
   concepts.
