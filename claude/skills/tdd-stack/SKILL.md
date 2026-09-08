@@ -73,6 +73,27 @@ stack file's `## Pace:` line so a context reset picks it back up.
 **What never changes with pace**: Full removes check-in stops, not design
 decisions. The hard gate fires at every pace.
 
+## Kickoff plans
+
+A kickoff plan is reconnaissance for a session that has not started yet — often
+written by a stronger model, then executed cold by another. It supplies frame
+candidates, file paths, the fixtures and helpers that already exist,
+verification commands, and the contracts it deliberately leaves open.
+
+**The skill outranks the plan.** A plan never relaxes the cycle. Where its prose
+and this skill disagree, the skill wins and the plan is wrong:
+
+- Prose describing a finished implementation describes the destination; it is
+  not a licence to write it before a test demands it. The plan's **test list**
+  is its contract, its narration of a method body is not.
+- A frame list is not pre-approval for an API shape — the hard gate still fires
+  (see ## Test Style).
+- An ordered frame list is not a work queue — frames still enter the numbered
+  stack only when something demands them (see ## Promoting a candidate frame).
+
+If you are **writing** a kickoff plan rather than executing one, read
+`references/kickoff-plan.md` and stop at the plan file.
+
 ## Session Setup
 
 Before the first test, do three things:
@@ -114,7 +135,8 @@ Before the first test, do three things:
    Below whatever single contract the plan flags as open, every proposed
    collaborator and API design goes through the hard gate (see ## Test Style)
    before a test locks it in, unless the user has said not to ask (e.g. "just
-   follow the plan's signatures").
+   follow the plan's signatures"). See ## Kickoff plans for what a plan may and
+   may not settle.
 
 ## Promoting a candidate frame
 
@@ -151,15 +173,20 @@ bullet bottoms out; frames nobody revisited are the ones most likely to be dead.
 2. Test is run and confirmed failing for the right reason. Any *further* "does
    this API look right?" check-in, beyond what the gate already requires, is
    pace-governed (see ## Pace).
-3. Agent implements the minimum to make it green.
+3. Agent implements the minimum to make it green — **only what the current
+   assertion forces.** A guard or error branch no test asserts on is not written
+   yet, however plainly a plan or a peer implementation spells it out; leave the
+   unguarded form so the gap crashes rather than quietly behaving correctly.
 4. Agent suggests edge cases — user picks which ones matter.
 5. Agent writes the selected edge case tests + implementation in one batch.
 6. Agent suggests refactors if warranted — user approves before any refactor is
    applied. Name the move (see ## Refactoring references).
 7. Repeat from step 1 for the next behavior. **End of cycle: in the conversation
-   reply, list every test added/touched by name.** The stack file is internal
-   state; the conversation is what the user reads. Whether "repeat" happens in
-   the same turn or after handing back control is pace-governed (see ## Pace).
+   reply, list every test added/touched by name, and every branch you added with
+   the test covering it** — an uncovered branch is named and backed out. The
+   stack file is internal state; the conversation is what the user reads. Whether
+   "repeat" happens in the same turn or after handing back control is
+   pace-governed (see ## Pace).
 
 ### Stubbing to make a red test compile
 
@@ -172,7 +199,8 @@ or an empty collection makes the test fail on an assertion — a weak signal tha
 reads like a logic bug — or, worse, pass vacuously. A "not implemented" error in
 the failure output is positive evidence the test reached the seam you meant.
 
-Add one stub at a time, and **track outstanding stubs in the stack file**: note
+Add one stub at a time, and **track outstanding stubs and placeholders in the
+stack file**: note
 each on the frame that will replace it, clear the note when that frame goes
 green. Otherwise a stub ships if the session ends mid-recursion (see
 `references/anti-patterns.md`: "Don't wire a production call site to a method
@@ -228,6 +256,11 @@ a short note (e.g. "edge cases deferred until tracer bullet lands") rather than
 default, not a rule: say when you're applying it, and if the user asks to fully
 close a frame before recursing (e.g. because a mock's failure contract is
 genuinely load-bearing for the next layer's design), do that instead.
+
+**A deferred edge case has neither a test nor an implementation.** Deferring
+means the branch is not written either: if the code already handles the case it
+is not deferred, it is untested code you have shipped — and the sweep back up
+finds it only as a test that passes the moment you write it.
 
 ## The bar for ✅
 
