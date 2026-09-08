@@ -1,7 +1,7 @@
 # Anti-patterns to avoid
 
-Read before letting a frame go green — these slip in silently. Call them out
-and back off.
+Read before you write the implementation, and again before letting a frame go
+green — these slip in silently. Call them out and back off.
 
 - **Don't write a guard no test asked for.** Not a precondition check
   (`require` / `assert` / `raise ValueError` / `if err != nil { return err }` /
