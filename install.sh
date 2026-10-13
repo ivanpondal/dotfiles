@@ -40,3 +40,15 @@ link i3status         "$HOME/.config/i3status"
 link claude/skills        "$HOME/.claude/skills"
 link claude/CLAUDE.md     "$HOME/.claude/CLAUDE.md"
 link claude/statusline.sh "$HOME/.claude/statusline.sh"
+
+# The turn-cost plugin, part by part so its tests stay in the repo. Earlier
+# installs linked the whole plugin: that link goes, so the parts land in a
+# real directory rather than back in the repo.
+plugin="$HOME/.claude/local-plugins/turn-cost"
+if [ -L "$plugin" ] && [ "$(readlink "$plugin")" = "$DOTFILES/claude/turn-cost" ]; then
+    rm "$plugin"
+    echo "unlink: $plugin"
+fi
+for part in .claude-plugin hooks scripts skills; do
+    link "claude/turn-cost/$part" "$plugin/$part"
+done
