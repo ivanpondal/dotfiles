@@ -5,8 +5,8 @@ it costs context on every request.
 
 ## Preferences
 
-- **Never `git push` without my explicit permission**, on any branch. Committing locally is fine.
-  Approval to make a change is not approval to push it — ask, then wait for an answer. Permission is
-  per-push, never standing.
+- **Never `git commit` or `git push` unless I explicitly ask**, on any branch. Leave changes
+  uncommitted in the working tree. Approval to make a change is not approval to commit or push it —
+  ask, then wait for an answer. Permission is per-commit and per-push, never standing.
 
 ## Code style

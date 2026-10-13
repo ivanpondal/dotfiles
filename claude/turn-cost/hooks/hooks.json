@@ -1,0 +1,4 @@
+{
+  "description": "Tallies every model request between a prompt and its answer, then logs the totals beneath the answer",
+  "modules": ["./register.ts"]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "turn-cost",
+  "version": "0.2.0",
+  "description": "After each prompt, a transcript line with its token counts, dollar cost, output tok/s and time to first token, subagents included; per-request lines switchable with /turn-cost steps.",
+  "author": {
+    "name": "Iván Pondal"
+  }
+}
