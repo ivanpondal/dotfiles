@@ -9,7 +9,8 @@
 Symlinks everything into place: `bin`, `.vim`, `.vimrc`, `.bashrc`,
 `.gitconfig`, `.gdbinit`, `.xinitrc`, `.Xresources`, `.drirc`, `i3` and
 `i3status` into `~/.config`, and the Claude Code config (`claude/skills`,
-`claude/CLAUDE.md`) into `~/.claude`.
+`claude/CLAUDE.md`) into `~/.claude`. The `turn-cost` plugin goes into
+`~/.claude/local-plugins/turn-cost`, all but its tests.
 
 Safe to re-run: links already pointing at this repo are left alone, and
 anything else in the way is moved to `<path>.backup.<timestamp>` rather than
